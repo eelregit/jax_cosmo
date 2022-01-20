@@ -37,14 +37,14 @@ probably good to have a look at the JAX [intro](https://jax.readthedocs.io/en/la
  - Functions should be preferred to methods. Because we want to be able to do
  things like:
  ```python
- jax.grad(Omega_m)(cosmo, a)
+ jax.grad(Omega_m_a)(cosmo, a)
  ```
  which will compute the derivative with respect to the cosmology. If cosmology
  wasn't an argument, it would be a lot more wordy:
  ```python
- def fn(cosmo):
-    return cosmo.Omega_m(a)
- jax.grad(fn)
+ def fn(cosmo, a):
+    return cosmo.Omega_m_a(a)
+ jax.grad(fn)(cosmo, a)
  ```
  - Careful with caching! Avoid it if possible, the only acceptable form of
  caching is by computing an interpolation table and returning the result of an
@@ -62,7 +62,7 @@ tracing.
 So we define a `container` class, which is a generic structure holding some
 parameters that need to be traced, and some static configuration arguments. The
 `container` class knows how to pack and unpack its arguments, in a manner compatible
-with the JAX custom types [(see here)](https://jax.readthedocs.io/en/latest/notebooks/JAX_pytrees.html)
+with the JAX custom types [(see here)](https://jax.readthedocs.io/en/latest/jax-101/05.1-pytrees.html).
 
 The `container` class will store all the positional arguments it receives during
 init in a list stored in `self.params`. These parameters are meant to be the
@@ -73,6 +73,7 @@ init. These arguments will be stored in `self.config`
 
 Concretely, we can define our redshift distribution this way:
 ```python
+@jax.tree_util.register_pytree_node_class
 class gaussian_nz(container):
 
   def __init__(self, z0, sigma, zmax=10, **kwargs):
@@ -85,7 +86,8 @@ class gaussian_nz(container):
                    0., self.config['zmax'])
 ```
 Note that in this example, the `__init__` isn't doing anything, we just leave it
-for readibility. JAX will know how to properly flatten and inflate this object
+for readibility. One only need to register the class as a pytree node via the decorator,
+after that JAX will know how to properly flatten and inflate this object
 through the tracing process. You can for instance now do the following:
 ```python
 # Define a likelihood, function of the redshift distribution
@@ -96,7 +98,7 @@ def likelihood(nz):
 >>> jax.grad(likelihood)(nz)
 (0.5346, 0.1123 )
 ```
-where what is the returned is the gradient of the redshift object.
+where the gradient of the redshift object in returned.
 
 In general, this container mechanism can be used to aggregate a bunch of
 parameters in one place, in a way that JAX knows how to handle.
@@ -109,8 +111,7 @@ In this section we cover aspects related to the cosmology API and implementation
 
 Here are the main modules:
 
-  - The `Cosmology` class: stores cosmological parameters, it is essentially an
-  instance of the `container`.
+  - The `Cosmology` class: stores cosmological parameters.
 
   - The `background` module: hosts functions of the comology to compute various
   background related quantities.
@@ -121,7 +122,7 @@ Here are the main modules:
 
   - The `angular_cl` module: hosts the Limber integration code, and covariance tools
 
-To these existing modules, we should add a `non_linear` for things like halofit.
+To these existing modules, we should add a `nonlinear_fn` for things like halofit.
 
 #### Handling of 2pt functions
 
@@ -134,8 +135,8 @@ tracer (e.g. lensing, number count, etc.) is characterized by the following:
   - An ell dependent prefactor
   - A transfer function
 
-In `jax-cosmo`, we define `probes` that are container
-objects (i.e. which can be differentiated), gathering in particular a list of
+In `jax-cosmo`, we define `probes` as container objects
+(i.e. which can be differentiated), gathering in particular a list of
 redshift distributions, and any other necessary parameters.
 
 ### Style Guide

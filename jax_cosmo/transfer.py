@@ -1,4 +1,4 @@
-# This module contains various transfer functions from the literatu
+# This module contains various transfer functions from the literature
 import jax.numpy as np
 
 import jax_cosmo.background as bkgrd

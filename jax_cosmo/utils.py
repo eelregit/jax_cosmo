@@ -5,5 +5,5 @@ def z2a(z):
 
 
 def a2z(a):
-    """converts from scale factor to  redshift"""
+    """converts from scale factor to redshift"""
     return 1.0 / a - 1.0
