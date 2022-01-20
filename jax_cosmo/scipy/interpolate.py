@@ -9,7 +9,7 @@ from jax.numpy import ones
 from jax.numpy import zeros
 from jax.tree_util import register_pytree_node_class
 
-__all__ = ["interp"]
+__all__ = ["interp", "InterpolatedUnivariateSpline"]
 
 
 @functools.partial(vmap, in_axes=(0, None, None))
