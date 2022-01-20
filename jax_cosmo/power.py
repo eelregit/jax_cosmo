@@ -3,7 +3,6 @@ import jax
 import jax.numpy as np
 
 import jax_cosmo.background as bkgrd
-import jax_cosmo.constants as const
 import jax_cosmo.transfer as tklib
 from jax_cosmo.scipy.integrate import romb
 from jax_cosmo.scipy.integrate import simps
@@ -77,11 +76,6 @@ def sigmasqr(cosmo, R, transfer_fn, kmin=0.0001, kmax=1000.0, ksteps=5, **kwargs
 
     y = romb(int_sigma, np.log10(kmin), np.log10(kmax), divmax=7)
     return 1.0 / (2.0 * np.pi ** 2.0) * y
-
-
-def linear(cosmo, k, a, transfer_fn):
-    """Linear matter power spectrum"""
-    return linear_matter_power(cosmo, k, a, transfer_fn)
 
 
 def _halofit_parameters(cosmo, a, transfer_fn):
